@@ -3,7 +3,7 @@ This has been inspired by Andrej Karpathy's makemore series. This project genera
 
 The notebooks for this repository are:
 1. [Using bigram](https://www.kaggle.com/code/atharva729/name-gen-bigram/)
-2. [Using Softmax MLP](https://www.kaggle.com/code/atharva729/name-gen-softmax-mlp/)
+2. [Using Softmax MLP](https://www.kaggle.com/code/atharva729/fork-of-name-gen-softmax-mlp)
 3. [Using Batch Normalization](https://www.kaggle.com/code/atharva729/name-gen-batch-norm)
 4. [Using Custom Backprop](https://www.kaggle.com/code/atharva729/name-gen-backprop)
 5. [Finalising](https://www.kaggle.com/code/atharva729/name-gen-finishing)
@@ -52,6 +52,14 @@ Creates a dictionary fr to store bigram frequencies (frequency of two consecutiv
 * The initial name generation results are not very realistic. This is likely due to the limitations of a simple bigram model and a small training dataset.
 * The explanation mentions exploring more complex network architectures and regularization techniques for better performance.
 
+error i achieved using only bigram approach: negative log likelihood: 2.188798666000366
+with neural network approach (90 epochs): loss was 2.2484030723571777
+
+and i could generate names were: not good to say the least
+too small and too long names like "n" and "uthanyesathishumanudhacfugahoovi" were generated. I could not find a single 'Indian-sounding' name.
+this was a bad model.
+
+
 ### Softmax MLP
 **Building the Dataset**
 
@@ -85,6 +93,21 @@ Creates a dictionary fr to store bigram frequencies (frequency of two consecutiv
 
 **The Results**
 
-* The generated names are looking much better now! We're getting some realistic-looking Indian names like "Jaselan" and "Shithansh".  
+* The generated names are looking much better now! We're getting some realistic-looking Indian names like "Nishan" and "Vindha".
+* the loss i got here was reduced a lot actually, it came down to 1.9452 on the validation set.  
 
 
+## 3. with batch norm
+probelms:
+1. initial loss is 27.~, if we assume unfirom distribution, it should be around 3.4~
+   * the problem is that the model is confidently wrong: the initial context is ... which can have any letter after it, that is why we see such a bad loss
+   * we want the logits to be nearly equal, or closer to zero to not give probablities that are far apart, to get the loss to a lower, expected value
+   * fix: make b2 a zero tensor, and make W2 very small (multiply by 0.1 or 0.01, do not make it 0)
+   * this makes a better algorithm: we do not waste the first small no of iterations on the hockey stick appearance, we start optimising from the start
+2. problem with h: the activations:
+   * tanh activations are mostly -1 or 1. happens due to nature of tanh (it requires small values of x to output a value that is not 1 or -1)
+   * this makes the backward pass (for that neuron) nearly useless. the grad vanishes because of +-1 values of tanh.
+   *  this is not that big of a probelm in our case. would have been if we got a neuron with all the examples having a tanh value of over 0.99. in this case, we would call that neuron a **dead neuron**. this neuron will never learn anything.
+   *  sigmoid and relu would suffer from this problem if something similar happens.
+   *  we can use leaky relu, or elu instead of these to get rid of the problem of dead neurons.
+   *  
